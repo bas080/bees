@@ -62,8 +62,7 @@ minetest.register_node("bees:hive", {
 minetest.register_node("bees:hive_artificial", {
   description = "Bee Hive",
   tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","bees_hive_artificial.png"},
-  drawtype = "nodebox",
-  paramtype = "light",
+  drawtype = "node",
   paramtype2 = "facedir",
   groups = {snappy=1,choppy=2,oddly_breakable_by_hand=2,flammable=3,wood=1},
   sounds = default.node_sound_wood_defaults(),
@@ -79,9 +78,8 @@ minetest.register_node("bees:hive_artificial", {
 minetest.register_node("bees:hive_artificial_inhabited", {
   description = "Bee Hive",
   tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","bees_hive_artificial.png"},
-  drawtype = "nodebox",
+  drawtype = "node",
   drop = "bees:hive_artificial 1",
-  paramtype = "light",
   paramtype2 = "facedir",
   groups = {snappy=1,choppy=2,oddly_breakable_by_hand=2,flammable=3,wood=1},
   sounds = default.node_sound_wood_defaults(),
