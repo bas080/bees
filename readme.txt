@@ -14,7 +14,7 @@ Minetest community
 
 forum
 -----
-?
+https://forum.minetest.net/viewtopic.php?pid=102905
 
 changelog
 ---------
