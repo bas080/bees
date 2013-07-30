@@ -205,8 +205,8 @@ minetest.register_craftitem("bees:queen", {
   description = "Queen Bee",
   inventory_image = "bees_particle_bee.png",
   on_use = function(itemstack, user, pointed_thing)
+    if pointed_thing.under == nil then return end
     local name = minetest.get_node(pointed_thing.under).name
-    
     if name == "bees:hive_artificial" then
       local facing = minetest.env:get_node(pointed_thing.under).param2
       minetest.set_node(pointed_thing.under, {name = "bees:hive_artificial_inhabited", parm2=facing})
