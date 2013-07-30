@@ -157,7 +157,7 @@ minetest.register_abm({ --for particles and sounds
 minetest.register_abm({ --spawn abm
   nodenames = {"group:leafdecay"},
   interval = 1800,
-  chance = 5,
+  chance = 500,
   action = function(pos, node, _, _)
     local p = {x=pos.x, y=pos.y-1, z=pos.z}
     if minetest.get_node(p).walkable == false then return end
@@ -217,13 +217,6 @@ minetest.register_craftitem("bees:queen", {
 })
 
 --crafts
-minetest.register_craft({
-  output = 'bees:honey 2',
-  recipe = {
-    {'bees:honey_comb'},
-  }
-})
-
 minetest.register_craft({
   output = 'bees:honey_bottle',
   recipe = {
