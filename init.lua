@@ -62,10 +62,22 @@ minetest.register_node("bees:hive", {
 minetest.register_node("bees:hive_artificial", {
   description = "Bee Hive",
   tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","bees_hive_artificial.png"},
-  drawtype = "node",
+  drawtype = "nodebox",
+  paramtype = "light",
   paramtype2 = "facedir",
   groups = {snappy=1,choppy=2,oddly_breakable_by_hand=2,flammable=3,wood=1},
   sounds = default.node_sound_wood_defaults(),
+  node_box = {
+    type = "fixed",
+    fixed = {
+      {-4/8, 2/8, -4/8, 4/8, 3/8, 4/8},
+      {-3/8, -4/8, -2/8, 3/8, 2/8, 3/8},
+      {-3/8, 0/8, -3/8, 3/8, 2/8, -2/8},
+      {-3/8, -4/8, -3/8, 3/8, -1/8, -2/8},
+      {-3/8, -1/8, -3/8, -1/8, 0/8, -2/8},
+      {1/8, -1/8, -3/8, 3/8, 0/8, -2/8},
+    }
+  },
   on_construct = function(pos)
     local tmr = minetest.env:get_node_timer(pos)
     tmr:start(10)
@@ -78,8 +90,20 @@ minetest.register_node("bees:hive_artificial", {
 minetest.register_node("bees:hive_artificial_inhabited", {
   description = "Bee Hive",
   tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","bees_hive_artificial.png"},
-  drawtype = "node",
+  drawtype = "nodebox",
+  node_box = {
+    type = "fixed",
+    fixed = {
+      {-4/8, 2/8, -4/8, 4/8, 3/8, 4/8},
+      {-3/8, -4/8, -2/8, 3/8, 2/8, 3/8},
+      {-3/8, 0/8, -3/8, 3/8, 2/8, -2/8},
+      {-3/8, -4/8, -3/8, 3/8, -1/8, -2/8},
+      {-3/8, -1/8, -3/8, -1/8, 0/8, -2/8},
+      {1/8, -1/8, -3/8, 3/8, 0/8, -2/8},
+    }
+  },
   drop = "bees:hive_artificial 1",
+  paramtype = "light",
   paramtype2 = "facedir",
   groups = {snappy=1,choppy=2,oddly_breakable_by_hand=2,flammable=3,wood=1},
   sounds = default.node_sound_wood_defaults(),
@@ -138,7 +162,7 @@ minetest.register_node("bees:hive_artificial_inhabited", {
 --abms
 minetest.register_abm({ --for particles and sounds
   nodenames = {"bees:hive", "bees:bees", "bees:hive_artificial_inhabited"},
-  interval = 0.3,
+  interval = 1,
   chance = 6,
   action = function(pos, node, _, _)
     if math.random()<0.5 then
@@ -159,7 +183,7 @@ minetest.register_abm({ --spawn abm
   action = function(pos, node, _, _)
     local p = {x=pos.x, y=pos.y-1, z=pos.z}
     if minetest.get_node(p).walkable == false then return end
-    if (minetest.find_node_near(p, 5, "group:flower") ~= nil and minetest.find_node_near(p, 20, "bees:hive") == nil) then
+    if (minetest.find_node_near(p, 5, "group:flora") ~= nil and minetest.find_node_near(p, 20, "bees:hive") == nil) then
       minetest.add_node(p, {name="bees:hive"})
     end
   end,
@@ -167,7 +191,7 @@ minetest.register_abm({ --spawn abm
 
 minetest.register_abm({ --spawning bees around bee hive
   nodenames = {"bees:hive"},
-  interval = 30,
+  interval = 10,
   chance = 2,
   action = function(pos, node, _, _)
     local p = {x=pos.x+math.random(-5,5), y=pos.y-math.random(0,3), z=pos.z+math.random(-5,5)}
@@ -180,7 +204,7 @@ minetest.register_abm({ --spawning bees around bee hive
 minetest.register_abm({ --remove bees
   nodenames = {"bees:bees"},
   interval = 60,
-  chance = 2,
+  chance = 4,
   action = function(pos, node, _, _)
     minetest.remove_node(pos)
   end,
