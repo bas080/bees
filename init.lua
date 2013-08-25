@@ -48,10 +48,6 @@ minetest.register_node("bees:hive", {
   end,
   on_construct = function(pos)
     minetest.get_node(pos).param2 = 0
-    local tmr = minetest.env:get_node_timer(pos)
-    local meta = minetest.env:get_meta(pos)
-    meta:set_string('angry','true')
-    tmr:start(300)
   end,
   on_punch = function(pos, node, puncher)
     local health = puncher:get_hp()
@@ -61,7 +57,7 @@ minetest.register_node("bees:hive", {
 
 minetest.register_node("bees:hive_artificial", {
   description = "Bee Hive",
-  tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","bees_hive_artificial.png"},
+  tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","default_wood.png^bees_hive_artificial.png"},
   drawtype = "nodebox",
   paramtype = "light",
   paramtype2 = "facedir",
@@ -89,7 +85,7 @@ minetest.register_node("bees:hive_artificial", {
 
 minetest.register_node("bees:hive_artificial_inhabited", {
   description = "Bee Hive",
-  tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","bees_hive_artificial.png"},
+  tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","default_wood.png^bees_hive_artificial.png"},
   drawtype = "nodebox",
   node_box = {
     type = "fixed",
@@ -178,6 +174,7 @@ minetest.register_abm({ --for particles and sounds
 
 minetest.register_abm({ --spawn abm
   nodenames = {"group:leafdecay"},
+  neighbors = {"default:apple"},
   interval = 1800,
   chance = 500,
   action = function(pos, node, _, _)
