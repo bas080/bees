@@ -4,7 +4,7 @@ Wild bees that spawn near flowers and in trees that can be harvested and domesti
 
 Version
 -------
-0.5
+0.6
 
 Contributors
 ------------
