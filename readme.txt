@@ -2,20 +2,21 @@ Bees
 ----
 Wild bees that spawn near flowers and in trees that can be harvested and domesticated
 
-Version
+version
 -------
-0.6
+0.5
 
-Contributors
+contributors
 ------------
 bas080
 VanessaE
+Neuromancer
 Minetest community
 
-Forum
+forum
 -----
 https://forum.minetest.net/viewtopic.php?pid=102905
 
-License
+license
 -------
 WTFPL

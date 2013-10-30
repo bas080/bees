@@ -1,12 +1,23 @@
 --Bees mod by bas080
+--[[TODO
+Smoker
+Grafting Tool
+
+]]
 local sound = {}
 local particles = {}
 
 --nodes
 minetest.register_node("bees:bees", {
   description = "Wild Bees",
-  drawtype = "airlike",
+  drawtype = "plantlike",
   paramtype = "light",
+  tiles = {
+    {
+      name="bees_strip.png", 
+      animation={type="vertical_frames", aspect_w=16,aspect_h=16, length=2.0}
+    }
+	},
   damage_per_second = 1,
   walkable = false,
   buildable_to = true,
@@ -25,7 +36,7 @@ minetest.register_node("bees:bees", {
 
 minetest.register_node("bees:hive", {
   description = "Wild Bee Hive",
-  tile_images = {"bees_hive_wild_bottom.png","bees_hive_wild_bottom.png", "bees_hive_wild.png","bees_hive_wild_s.png", "bees_hive_wild_s.png", "bees_hive_wild_s.png"},
+  tile_images = {"bees_hive_wild.png","bees_hive_wild.png","bees_hive_wild.png", "bees_hive_wild.png", "bees_hive_wild_bottom.png"}, --Neuromancer's base texture
   drawtype = "nodebox",
   paramtype = "light",
   paramtype2 = 'wallmounted',
@@ -48,13 +59,6 @@ minetest.register_node("bees:hive", {
       {-0.062500,-0.500000,-0.062500,0.062500,0.500000,0.062500}, --NodeBox 6
     }
   },
-  on_destruct = function(pos)
-    if sound["x"..pos.x.."y"..pos.y.."z"..pos.z] ~= nil then
-      minetest.sound_stop(sound["x"..pos.x.."y"..pos.y.."z"..pos.z])
-      sound["x"..pos.x.."y"..pos.y.."z"..pos.z] = nil
-    end
-    remove_bees(pos)
-  end,
   on_construct = function(pos)
     spawn_bees(pos)
     minetest.get_node(pos).param2 = 0
@@ -62,8 +66,16 @@ minetest.register_node("bees:hive", {
   on_punch = function(pos, node, puncher)
     local health = puncher:get_hp()
     puncher:set_hp(health-2)
-    spawn_bees(pos)
   end,
+  after_dig_node = function(pos, oldnode, oldmetadata, user)
+    local wielded if user:get_wielded_item() ~= nil then wielded = user:get_wielded_item() else return end
+    if 'bees:grafting_tool' == wielded:get_name() then 
+      local inv = user:get_inventory()
+      if inv then
+        inv:add_item("main", ItemStack("bees:queen"))
+      end
+    end
+  end
 })
 
 minetest.register_node("bees:hive_artificial", {
@@ -147,9 +159,6 @@ minetest.register_node("bees:hive_artificial_inhabited", {
     meta:set_int("honey", 0)
     meta:set_string('infotext','0%');
   end,
-  on_destruct = function(pos)
-    remove_bees(pos)
-  end,
   on_punch = function(pos, node, puncher)
     local health = puncher:get_hp()
     puncher:set_hp(health-2)
@@ -169,6 +178,15 @@ minetest.register_node("bees:hive_artificial_inhabited", {
       tmr:start(60)
     end
   end,
+  after_dig_node = function(pos, oldnode, oldmetadata, user)
+    local wielded if user:get_wielded_item() ~= nil then wielded = user:get_wielded_item() else return end
+    if 'bees:grafting_tool' == wielded:get_name() then 
+      local inv = user:get_inventory()
+      if inv then
+        inv:add_item("main", ItemStack("bees:queen"))
+      end
+    end
+  end
 })
 
 --abms
@@ -211,7 +229,7 @@ playername
 )
 ]]
 function spawn_bees(pos)
-  local id = minetest.pos_to_string(pos)
+  --[[local id = minetest.pos_to_string(pos)
   if particles[id] ~= nil then return end
   particles[id] = minetest.add_particlespawner(
     2,
@@ -224,12 +242,14 @@ function spawn_bees(pos)
     true, 
     "bees_particle_bee.png"
   )
+  ]]
 end
 
 function remove_bees(pos)
-  local id = particles[minetest.pos_to_string(pos)]
+  --[[local id = particles[minetest.pos_to_string(pos)]
   if id == nil then return end
   minetest.delete_particlespawner(id)
+  ]]
 end
 
 minetest.register_abm({ --spawn abm
@@ -313,4 +333,26 @@ minetest.register_craft({
 		{'group:wood','default:stick','group:wood'},
 		{'group:wood','default:stick','group:wood'},
 	}
+})
+
+minetest.register_tool("bees:grafting_tool", {
+	description = "Grafting Tool",
+	inventory_image = "bees_grafting_tool.png",
+	tool_capabilities = {
+		full_punch_interval = 3.0,
+		max_drop_level=0,
+		groupcaps={
+			choppy = {times={[2]=3.00, [3]=2.00}, uses=10, maxlevel=1},
+		},
+		damage_groups = {fleshy=2},
+	},
+})
+
+minetest.register_craft({
+  output = 'bees:grafting_tool',
+  recipe = {
+    {'', '', 'default:steel_ingot'},
+    {'', 'default:stick', ''},
+    {'', '', ''},
+  }
 })
