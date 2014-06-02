@@ -2,14 +2,40 @@
 --[[TODO
 Smoker
 Grafting Tool
-
+Spreading bee colonies
+Make flowers reproduce when near a hive
+Add formspec to twild hive when using grafting tool
+Make hive drop to ground
 ]]
 local sound = {}
 local particles = {}
+local bees = {}
+local formspecs = {}
 
---nodes
+--FUNCTIONS
+function formspecs.hive_wild(pos)
+  local spos = pos.x .. "," .. pos.y .. "," ..pos.z
+  local formspec =
+    "size[8,9]"..
+    "list[nodemeta:".. spos .. ";main;0,0;8,4;]"..
+    "list[current_player;main;0,5;8,4;]"
+  return formspec
+end
+
+function formspecs.hive_artificial(pos)
+  local spos = pos.x..","..pos.y..","..pos.z
+  local formspec =
+    "size[8,9]"..
+    "list[nodemeta:"..spos..";queen;0,0;1,1;]"..
+    "list[nodemeta:"..spos..";frame;0,1;1,8;]"..
+    "list[current_player;main;0,5;8,4;]"
+  print(formspec)
+  return formspec
+end
+
+--NODES
 minetest.register_node("bees:bees", {
-  description = "Wild Bees",
+  description = "Flying Bees",
   drawtype = "plantlike",
   paramtype = "light",
   tiles = {
@@ -17,7 +43,7 @@ minetest.register_node("bees:bees", {
       name="bees_strip.png", 
       animation={type="vertical_frames", aspect_w=16,aspect_h=16, length=2.0}
     }
-	},
+  },
   damage_per_second = 1,
   walkable = false,
   buildable_to = true,
@@ -34,7 +60,7 @@ minetest.register_node("bees:bees", {
   end,
 })
 
-minetest.register_node("bees:hive", {
+minetest.register_node("bees:hive_wild", {
   description = "Wild Bee Hive",
   tile_images = {"bees_hive_wild.png","bees_hive_wild.png","bees_hive_wild.png", "bees_hive_wild.png", "bees_hive_wild_bottom.png"}, --Neuromancer's base texture
   drawtype = "nodebox",
@@ -67,6 +93,13 @@ minetest.register_node("bees:hive", {
     local health = puncher:get_hp()
     puncher:set_hp(health-2)
   end,
+  on_rightclick = function(pos, node, clicker, itemstack)
+    minetest.show_formspec(
+      clicker:get_player_name(),
+      "bees:hive_artificial",
+      formspecs.hive_artificial(pos)
+    )
+  end,
   after_dig_node = function(pos, oldnode, oldmetadata, user)
     local wielded if user:get_wielded_item() ~= nil then wielded = user:get_wielded_item() else return end
     if 'bees:grafting_tool' == wielded:get_name() then 
@@ -98,36 +131,26 @@ minetest.register_node("bees:hive_artificial", {
     }
   },
   on_construct = function(pos)
-    local tmr = minetest.get_node_timer(pos)
-    tmr:start(10)
+    local timer = minetest.get_node_timer(pos)
     local meta = minetest.get_meta(pos)
-    meta:set_string('inhabited','false')
-    meta:set_string('infotext','Requires the Queen bee');
+    meta:set_string('infotext','Requires the Queen bee')
+    meta:set_string('queen', 'love it!')
   end,
-})
-
-minetest.register_node("bees:hive_artificial_inhabited", {
-  description = "Bee Hive",
-  tiles = {"default_wood.png","default_wood.png","default_wood.png", "default_wood.png","default_wood.png","bees_hive_artificial.png"},
-  drawtype = "nodebox",
-  node_box = {
-    type = "fixed",
-    fixed = {
-      {-4/8, 2/8, -4/8, 4/8, 3/8, 4/8},
-      {-3/8, -4/8, -2/8, 3/8, 2/8, 3/8},
-      {-3/8, 0/8, -3/8, 3/8, 2/8, -2/8},
-      {-3/8, -4/8, -3/8, 3/8, -1/8, -2/8},
-      {-3/8, -1/8, -3/8, -1/8, 0/8, -2/8},
-      {1/8, -1/8, -3/8, 3/8, 0/8, -2/8},
-    }
-  },
-  drop = "bees:hive_artificial 1",
-  paramtype = "light",
-  paramtype2 = "facedir",
-  groups = {snappy=1,choppy=2,oddly_breakable_by_hand=2,flammable=3,wood=1},
-  sounds = default.node_sound_wood_defaults(),
-  --on_punch = candles.collect,
+  on_rightclick = function(pos, node, clicker, itemstack)
+    minetest.show_formspec(
+      clicker:get_player_name(),
+      "bees:hive_artificial",
+      formspecs.hive_artificial(pos)
+    )
+  end,
   on_timer = function(pos,elapsed)
+    local meta = minetest.get_meta(pos)
+    local queen = meta:get_meta('queen')
+    if queen == 'none' then
+      return
+    else
+      --if has queen
+    end
     local rad  = 10
     local minp = {x=pos.x-rad, y=pos.y-rad, z=pos.z-rad}
     local maxp = {x=pos.x+rad, y=pos.y+rad, z=pos.z+rad}
@@ -136,7 +159,6 @@ minetest.register_node("bees:hive_artificial_inhabited", {
     for i in ipairs(flower_in_area) do
       flower_number = flower_number + 1
     end
-    local meta = minetest.get_meta(pos)
     local honey = meta:get_int("honey")
     honey = honey + flower_number/10
     
@@ -150,83 +172,70 @@ minetest.register_node("bees:hive_artificial_inhabited", {
       meta:set_int("honey", 100)
     end
   end,
-  on_construct = function(pos)
-    spawn_bees(pos)
-    local tmr = minetest.get_node_timer(pos)
-    tmr:start(60)
+  on_metadata_inventory_put = function(pos, listname, index, stack, player)
     local meta = minetest.get_meta(pos)
-    meta:set_string('inhabited','false')
-    meta:set_int("honey", 0)
-    meta:set_string('infotext','0%');
-  end,
-  on_punch = function(pos, node, puncher)
-    local health = puncher:get_hp()
-    puncher:set_hp(health-2)
-    spawn_bees(pos)
-  end,
-  on_rightclick = function(pos, node, puncher)
-    local meta = minetest.get_meta(pos)
-    local honey = meta:get_int("honey")
-    if honey == 100 then
-      for i=math.random(1,3), 0, -1  do
-        local p = {x=pos.x+math.random()-0.5,y=pos.y+1,z=pos.z+math.random()-0.5}
-        minetest.add_item(p, "bees:honey_comb")
-      end
-      meta:set_int("honey", 0)
-      meta:set_string('infotext',"0%");
-      local tmr = minetest.get_node_timer(pos)
-      tmr:start(60)
+    local inv = meta:get_inventory()
+    local queen = meta:get_string('queen')
+    meta:set_string(stack:get_name())
+    if listname == "queen" then
+      meta:set_string('queen', stack)
+      inv:remove_item("drop", stack)
+      inv:add_item("main", stack)
     end
   end,
-  after_dig_node = function(pos, oldnode, oldmetadata, user)
-    local wielded if user:get_wielded_item() ~= nil then wielded = user:get_wielded_item() else return end
-    if 'bees:grafting_tool' == wielded:get_name() then 
-      local inv = user:get_inventory()
-      if inv then
-        inv:add_item("main", ItemStack("bees:queen"))
-      end
-    end
-  end
+  allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+    return true
+  end,
 })
 
 --abms
---[[
-minetest.register_abm({ --for particles and sounds
-  nodenames = {"bees:hive", "bees:bees", "bees:hive_artificial_inhabited"},
-  interval = 1,
-  chance = 6,
-  action = function(pos, node, _, _)
-    if math.random()<0.5 then
-      local img = "bees_particle_bee.png"
-    else
-      local img = "bees_particle_bee_r.png"
-    end
-    sound["x"..pos.x.."y"..pos.y.."z"..pos.z] = minetest.sound_play({name="bees"},{pos=pos, max_hear_distance=8, gain=0.6})
-    local p = {x=pos.x, y=pos.y+math.random()-0.5, z=pos.z}
-    
-  end,
+minetest.register_abm({
+  nodenames = {'bees:hive_wild'},
+  interval = 200,
+  chance = 10,
+  action = function(pos, node)
+    print(pos)
+    local leaves = minetest.find_node_near(p, 5, "group:leaves")
+    --itterate over leaves
+    --check if bottom node is air and check if not to near other bee hives/
+
+  end
 })
-
-minetest.add_particle(
-  p,
-  {x=(math.random()-0.5)*5,y=(math.random()-0.5)*5,z=(math.random()-0.5)*5},
-  {x=math.random()-0.5,y=math.random()-0.5,z=math.random()-0.5}, 
-  math.random(2,5), 
-  math.random(3), 
-  true, 
-  "bees_particle_bee.png"
-)
-
-minetest.add_particle(
-pos, 
-velocity, 
-acceleration, 
-expirationtime,
-size, 
-collisiondetection, 
-texture, 
-playername
-)
+--[[
+  minetest.register_abm({ --for particles and sounds
+    nodenames = {"bees:hive", "bees:bees", "bees:hive_artificial_inhabited"},
+    interval = 1,
+    chance = 6,
+    action = function(pos, node, _, _)
+      if math.random()<0.5 then
+        local img = "bees_particle_bee.png"
+      else
+        local img = "bees_particle_bee_r.png"
+      end
+      sound["x"..pos.x.."y"..pos.y.."z"..pos.z] = minetest.sound_play({name="bees"},{pos=pos, max_hear_distance=8, gain=0.6})
+      local p = {x=pos.x, y=pos.y+math.random()-0.5, z=pos.z}
+      
+    end,
+  })
+  minetest.add_particle(
+    p,
+    {x=(math.random()-0.5)*5,y=(math.random()-0.5)*5,z=(math.random()-0.5)*5},
+    {x=math.random()-0.5,y=math.random()-0.5,z=math.random()-0.5}, 
+    math.random(2,5), 
+    math.random(3), 
+    true, 
+    "bees_particle_bee.png"
+  )
+  minetest.add_particle(
+    pos, 
+    velocity, 
+    acceleration, 
+    expirationtime,
+    size, 
+    collisiondetection, 
+    texture, 
+    playername
+  )
 ]]
 function spawn_bees(pos)
   --[[local id = minetest.pos_to_string(pos)
@@ -253,8 +262,8 @@ function remove_bees(pos)
 end
 
 minetest.register_abm({ --spawn abm
-  nodenames = {"group:leafdecay"},
-  neighbors = {"default:apple"},
+  nodenames = {"bees:hive_wild"},
+  neighbors = {""},
   interval = 1800,
   chance = 500,
   action = function(pos, node, _, _)
@@ -327,25 +336,25 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
-	output = 'bees:hive_artificial',
-	recipe = {
-		{'group:wood','group:wood','group:wood'},
-		{'group:wood','default:stick','group:wood'},
-		{'group:wood','default:stick','group:wood'},
-	}
+  output = 'bees:hive_artificial',
+  recipe = {
+    {'group:wood','group:wood','group:wood'},
+    {'group:wood','default:stick','group:wood'},
+    {'group:wood','default:stick','group:wood'},
+  }
 })
 
 minetest.register_tool("bees:grafting_tool", {
-	description = "Grafting Tool",
-	inventory_image = "bees_grafting_tool.png",
-	tool_capabilities = {
-		full_punch_interval = 3.0,
-		max_drop_level=0,
-		groupcaps={
-			choppy = {times={[2]=3.00, [3]=2.00}, uses=10, maxlevel=1},
-		},
-		damage_groups = {fleshy=2},
-	},
+  description = "Grafting Tool",
+  inventory_image = "bees_grafting_tool.png",
+  tool_capabilities = {
+    full_punch_interval = 3.0,
+    max_drop_level=0,
+    groupcaps={
+      choppy = {times={[2]=3.00, [3]=2.00}, uses=10, maxlevel=1},
+    },
+    damage_groups = {fleshy=2},
+  },
 })
 
 minetest.register_craft({
@@ -356,3 +365,5 @@ minetest.register_craft({
     {'', '', ''},
   }
 })
+
+print("[Mod]Bees Loaded!")
