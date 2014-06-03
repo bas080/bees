@@ -357,12 +357,6 @@
     stack_max = 8,
   })
 
-  minetest.register_craftitem('bees:honey_bottle', {
-    description = 'Honey Bottle',
-    inventory_image = 'bees_honey_bottle.png',
-    on_use = minetest.item_eat(6),
-  })
-
   minetest.register_craftitem('bees:queen', {
     description = 'Queen Bee',
     inventory_image = 'bees_particle_bee.png',
@@ -370,14 +364,6 @@
   })
 
 --CRAFTS
-  minetest.register_craft({
-    output = 'bees:honey_bottle',
-    recipe = {
-      {'bees:honey_comb'},
-      {'vessels:glass_bottle'},
-    }
-  })
-
   minetest.register_craft({
     output = 'bees:hive_artificial',
     recipe = {
