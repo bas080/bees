@@ -421,4 +421,5 @@
 
 --ALIASES
   minetest.register_alias('bees:hive', 'bees:hive_wild')
+  minetest.register_alias('bees:hive_artificial_inhabited', 'bees:hive_artificial')
 print('[Mod]Bees Loaded!')
