@@ -405,7 +405,31 @@
     },
   })
 
---ALIASES
-  minetest.register_alias('bees:hive', 'bees:hive_wild')
-  minetest.register_alias('bees:hive_artificial_inhabited', 'bees:hive_artificial')
+--ALIASES (enable once old nodes have been changed to the new versions)
+  --minetest.register_alias('bees:hive', 'bees:hive_wild')
+  --minetest.register_alias('bees:hive_artificial_inhabited', 'bees:hive_artificial')
+
+--COMPATIBILTY --remove after all has been updated
+  minetest.register_abm({
+    nodenames = {'bees:hive', 'bees:hive_artificial_inhabited'},
+    interval = 0,
+    chance = 1,
+    action = function(pos, node)
+      if node.name == 'bees:hive' then
+        minetest.set_node(pos, { name = 'bees:hive_wild' })
+        local meta = minetest.get_meta(pos)
+        local inv  = meta:get_inventory()
+        inv:set_stack('queen', 1, 'bees:queen')
+      end
+      if node.name == 'bees:hive_artificial_inhabited' then
+        minetest.set_node(pos, { name = 'bees:hive_artificial_inhabited' })
+        local meta = minetest.get_meta(pos)
+        local inv  = meta:get_inventory()
+        inv:set_stack('queen', 1, 'bees:queen')
+        local timer = minetest.get_node_timer(pos)
+        timer:start(60)
+      end
+    end,
+  })
+
 print('[Mod]Bees Loaded!')

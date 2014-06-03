@@ -15,6 +15,7 @@ FUTURE
 - a centrifuge to extract the honey from the frames
 - more realistic spawning of wild bee hives
 - improved textures
+- pipeworks compatibility (Industrial beehive) 
 
 CONTRIBUTORS
 ------------
