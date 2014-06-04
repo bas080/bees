@@ -55,7 +55,9 @@
 --NODES
   minetest.register_node('bees:honey_extractor', {
     description = 'honey extractor',
-    tiles = {'default_wood.png'},
+    tiles = {"bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor_front.png"},
+    paramtype2 = "facedir",
+    groups = {choppy=2,oddly_breakable_by_hand=2},
     on_construct = function(pos, node)
       local meta = minetest.get_meta(pos)
       local inv  = meta:get_inventory()
