@@ -4,17 +4,6 @@
 --Version	2.2
 --License	WTFPL
 
---FEATURES
-  --pipeworks industrial hive
-  --more realistic colonie spreading
-  --x sweet particles bra
-  --x smokers to calm down the bees before opening the hive
-  --x frame honey and wax extractor
-  --x spreading bee colonies
-  --x grafting tool - to remove queen bees from wild hives
-  --x Make flowers reproduce when near a hive
-  --x Add formspec to twild hive when using grafting tool
-
 --VARIABLES
   local bees = {}
   local formspecs = {}
@@ -494,6 +483,24 @@
   })
 
 --CRAFTS
+  minetest.register_craft({
+    output = 'bees:extractor',
+    recipe = {
+      {'','steel:sheet_metal',''},
+      {'steel:sheet_metal','steel:rod','steel:sheet_metal'},
+      {'default:mese_crystal','steel:sheet_metal','default:mese_crystal'},
+    }
+  })
+
+  minetest.register_craft({
+    output = 'bees:smoker',
+    recipe = {
+      {'steel:sheet_metal', 'wool:red', ''},
+      {'', 'default:torch', ''},
+      {'', 'steel:sheet_metal',''},
+    }
+  })
+
   minetest.register_craft({
     output = 'bees:hive_artificial',
     recipe = {
