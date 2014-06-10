@@ -42,7 +42,7 @@
   end
 
 --NODES
-  minetest.register_node('bees:honey_extractor', {
+  minetest.register_node('bees:extractor', {
     description = 'honey extractor',
     tiles = {"bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor_front.png"},
     paramtype2 = "facedir",
@@ -486,18 +486,18 @@
   minetest.register_craft({
     output = 'bees:extractor',
     recipe = {
-      {'','steel:sheet_metal',''},
-      {'steel:sheet_metal','steel:rod','steel:sheet_metal'},
-      {'default:mese_crystal','steel:sheet_metal','default:mese_crystal'},
+      {'','default:steel_ingot',''},
+      {'default:steel_ingot','default:stick','default:steel_ingot'},
+      {'default:mese_crystal','default:steel_ingot','default:mese_crystal'},
     }
   })
 
   minetest.register_craft({
     output = 'bees:smoker',
     recipe = {
-      {'steel:sheet_metal', 'wool:red', ''},
+      {'default:steel_ingot', 'wool:red', ''},
       {'', 'default:torch', ''},
-      {'', 'steel:sheet_metal',''},
+      {'', 'default:steel_ingot',''},
     }
   })
 
@@ -568,6 +568,8 @@
   })
 
 --COMPATIBILTY --remove after all has been updated
+  --ALIASES
+    minetest.register_alias('bees:honey_extractor', 'bees:extractor')
   --BACKWARDS COMPATIBILITY WITH OLDER VERSION  
     minetest.register_alias('bees:honey_bottle', 'bees:bottle_honey')
     minetest.register_abm({

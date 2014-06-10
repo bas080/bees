@@ -7,6 +7,10 @@ https://github.com/VanessaE/minetest-steel
 
 FEATURES
 --------
+2.2.1
+- removed steel dependency temporarily
+- fixed the craft for the extractor (and added alias for)
+
 2.2
 - craft for extractor
 - extractor texture update
