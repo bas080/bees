@@ -584,7 +584,7 @@
           inv:set_stack('queen', 1, 'bees:queen')
         end
         if node.name == 'bees:hive_artificial_inhabited' then
-          minetest.set_node(pos, { name = 'bees:hive_artificial_inhabited' })
+          minetest.set_node(pos, { name = 'bees:hive_artificial' })
           local meta = minetest.get_meta(pos)
           local inv  = meta:get_inventory()
           inv:set_stack('queen', 1, 'bees:queen')
