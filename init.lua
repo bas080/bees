@@ -499,7 +499,7 @@
     description = 'honey bottle',
     inventory_image = 'bees_bottle_honey.png',
     stack_max = 12,
-    on_use = minetest.item_eat(3),
+    on_use = minetest.item_eat(3, "vessels:glass_bottle"),
   })
   
   minetest.register_craftitem('bees:wax', {
