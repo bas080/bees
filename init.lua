@@ -72,14 +72,12 @@
     on_timer = function(pos, node)
       local meta = minetest.get_meta(pos)
       local inv  = meta:get_inventory()
-      if not inv:contains_item('frames_filled','bees:frame_full') and not inv:contains_item('bottles_empty','vessels:glass_bottle') then
+      if not inv:contains_item('frames_filled','bees:frame_full') or not inv:contains_item('bottles_empty','vessels:glass_bottle') then
         return
       end
       if inv:room_for_item('frames_emptied', 'bees:frame_empty') 
       and inv:room_for_item('wax','bees:wax') 
-      and inv:room_for_item('bottles_full', 'bees:bottle_honey') --output ok
-      and inv:contains_item('frames_filled','bees:frame_full')  
-      and inv:contains_item('bottles_empty', 'vessels:glass_bottle') then --input ok
+      and inv:room_for_item('bottles_full', 'bees:bottle_honey') then
         --add to output
         inv:add_item('frames_emptied', 'bees:frame_empty')
         inv:add_item('wax', 'bees:wax')
@@ -100,6 +98,9 @@
         })
         local timer = minetest.get_node_timer(pos)
         timer:start(5)
+      else
+        local timer = minetest.get_node_timer(pos)
+        timer:start(1) -- Try again in 1 second
       end
     end,
     tube = {
@@ -107,16 +108,20 @@
         local meta = minetest.get_meta(pos)
         local inv = meta:get_inventory()
         local timer = minetest.get_node_timer(pos)
-        timer:start(5)
         if stack:get_name() == "bees:frame_full" then
+          if inv:is_empty("frames_filled") then
+            timer:start(5)
+          end
           return inv:add_item("frames_filled",stack)
         elseif stack:get_name() == "vessels:glass_bottle" then
+          if inv:is_empty("bottles_empty") then
+            timer:start(5)
+          end
           return inv:add_item("bottles_empty",stack)
         end
         return stack
       end,
       can_insert = function(pos,node,stack,direction)
-        --print(dump(stack:to_table()))
         local meta = minetest.get_meta(pos)
         local inv = meta:get_inventory()
         if stack:get_name() == "bees:frame_full" then
@@ -131,20 +136,22 @@
     },
     on_metadata_inventory_put = function(pos, listname, index, stack, player)
       local timer = minetest.get_node_timer(pos)
-      timer:start(5) --create a honey bottle and empty frame and wax every 5 seconds
-    end,
-    on_metadata_inventory_take = function(pos, listname, index, stack, player)
-      local timer = minetest.get_node_timer(pos)
-      timer:start(5) --create a honey bottle and empty frame and wax every 5 seconds
+      local meta = minetest.get_meta(pos)
+      local inv = meta:get_inventory()
+      if inv:is_empty(listname) then
+          timer:start(5) --create a honey bottle and empty frame and wax every 5 seconds
+      end
     end,
     allow_metadata_inventory_put = function(pos, listname, index, stack, player)
-      print(listname..stack:get_name())
-      if listname == 'bottles_empty' and stack:get_name() == 'vessels:glass_bottle' or listname == 'frames_filled' and stack:get_name() == 'bees:frame_full' then
+      if (listname == 'bottles_empty' and stack:get_name() == 'vessels:glass_bottle') or (listname == 'frames_filled' and stack:get_name() == 'bees:frame_full') then
         return stack:get_count()
       else
         return 0
       end  
-    end
+    end,
+    allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+      return 0
+    end,
   })
 
   minetest.register_node('bees:bees', {
