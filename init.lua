@@ -138,7 +138,7 @@
       local timer = minetest.get_node_timer(pos)
       local meta = minetest.get_meta(pos)
       local inv = meta:get_inventory()
-      if inv:is_empty(listname) then
+      if inv:get_stack(listname, 1):get_count() == stack:get_count() then -- inv was empty -> start the timer
           timer:start(5) --create a honey bottle and empty frame and wax every 5 seconds
       end
     end,
