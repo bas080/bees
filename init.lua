@@ -46,7 +46,7 @@
     description = 'honey extractor',
     tiles = {"bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor.png", "bees_extractor_front.png"},
     paramtype2 = "facedir",
-    groups = {choppy=2,oddly_breakable_by_hand=2},
+    groups = {choppy=2,oddly_breakable_by_hand=2,tubedevice=1,tubedevice_receiver=1},
     on_construct = function(pos, node)
       local meta = minetest.get_meta(pos)
       local inv  = meta:get_inventory()
@@ -72,14 +72,12 @@
     on_timer = function(pos, node)
       local meta = minetest.get_meta(pos)
       local inv  = meta:get_inventory()
-      if not inv:contains_item('frames_filled','bees:frame_full') and not inv:contains_item('bottles_empty','vessels:glass_bottle') then
+      if not inv:contains_item('frames_filled','bees:frame_full') or not inv:contains_item('bottles_empty','vessels:glass_bottle') then
         return
       end
       if inv:room_for_item('frames_emptied', 'bees:frame_empty') 
       and inv:room_for_item('wax','bees:wax') 
-      and inv:room_for_item('bottles_full', 'bees:bottle_honey') --output ok
-      and inv:contains_item('frames_filled','bees:frame_full')  
-      and inv:contains_item('bottles_empty', 'vessels:glass_bottle') then --input ok
+      and inv:room_for_item('bottles_full', 'bees:bottle_honey') then
         --add to output
         inv:add_item('frames_emptied', 'bees:frame_empty')
         inv:add_item('wax', 'bees:wax')
@@ -100,24 +98,60 @@
         })
         local timer = minetest.get_node_timer(pos)
         timer:start(5)
+      else
+        local timer = minetest.get_node_timer(pos)
+        timer:start(1) -- Try again in 1 second
       end
     end,
+    tube = {
+      insert_object = function(pos, node, stack, direction)
+        local meta = minetest.get_meta(pos)
+        local inv = meta:get_inventory()
+        local timer = minetest.get_node_timer(pos)
+        if stack:get_name() == "bees:frame_full" then
+          if inv:is_empty("frames_filled") then
+            timer:start(5)
+          end
+          return inv:add_item("frames_filled",stack)
+        elseif stack:get_name() == "vessels:glass_bottle" then
+          if inv:is_empty("bottles_empty") then
+            timer:start(5)
+          end
+          return inv:add_item("bottles_empty",stack)
+        end
+        return stack
+      end,
+      can_insert = function(pos,node,stack,direction)
+        local meta = minetest.get_meta(pos)
+        local inv = meta:get_inventory()
+        if stack:get_name() == "bees:frame_full" then
+          return inv:room_for_item("frames_filled",stack)
+        elseif stack:get_name() == "vessels:glass_bottle" then
+          return inv:room_for_item("bottles_empty",stack)
+        end
+        return false
+      end,
+      input_inventory = {"frames_emptied", "bottles_full", "wax"},
+      connect_sides = {left=1, right=1, back=1, front=1, bottom=1, top=1}
+    },
     on_metadata_inventory_put = function(pos, listname, index, stack, player)
       local timer = minetest.get_node_timer(pos)
-      timer:start(5) --create a honey bottle and empty frame and wax every 5 seconds
-    end,
-    on_metadata_inventory_take = function(pos, listname, index, stack, player)
-      local timer = minetest.get_node_timer(pos)
-      timer:start(5) --create a honey bottle and empty frame and wax every 5 seconds
+      local meta = minetest.get_meta(pos)
+      local inv = meta:get_inventory()
+      if inv:get_stack(listname, 1):get_count() == stack:get_count() then -- inv was empty -> start the timer
+          timer:start(5) --create a honey bottle and empty frame and wax every 5 seconds
+      end
     end,
     allow_metadata_inventory_put = function(pos, listname, index, stack, player)
-      print(listname..stack:get_name())
-      if listname == 'bottles_empty' and stack:get_name() == 'vessels:glass_bottle' or listname == 'frames_filled' and stack:get_name() == 'bees:frame_full' then
+      if (listname == 'bottles_empty' and stack:get_name() == 'vessels:glass_bottle') or (listname == 'frames_filled' and stack:get_name() == 'bees:frame_full') then
         return stack:get_count()
       else
         return 0
       end  
-    end
+    end,
+    allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+      return 0
+    end,
   })
 
   minetest.register_node('bees:bees', {
@@ -355,8 +389,13 @@
       end
     end,
     allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
-      if from_list ~= to_list then 
-        return 1 
+      local inv = minetest.get_meta(pos):get_inventory()
+      if from_list == to_list then 
+        if inv:get_stack(to_list, to_index):is_empty() then
+          return 1
+        else
+          return 0
+        end
       else
         return 0
       end
@@ -460,7 +499,7 @@
     description = 'honey bottle',
     inventory_image = 'bees_bottle_honey.png',
     stack_max = 12,
-    on_use = minetest.item_eat(3),
+    on_use = minetest.item_eat(3, "vessels:glass_bottle"),
   })
   
   minetest.register_craftitem('bees:wax', {
@@ -595,11 +634,172 @@
     })
 
   --PIPEWORKS
-    if false then --todo
-      minetest.register_node('bees:hive_industrial', { --the hive that is compatible with pipeworks and is only when pipeworks is installed
-        description = 'industrial hive',
-        tiles = {},
-      })
+    if minetest.get_modpath("pipeworks") then
+      minetest.register_node('bees:hive_industrial', {
+      description = 'industrial bee hive',
+      tiles = {'default_wood.png','default_wood.png','default_wood.png', 'default_wood.png','default_wood.png','bees_hive_industrial.png'},
+    drawtype = 'nodebox',
+    paramtype = 'light',
+    paramtype2 = 'facedir',
+    groups = {snappy=1,choppy=2,oddly_breakable_by_hand=2,flammable=3,wood=1,tubedevice=1,tubedevice_receiver=1},
+    sounds = default.node_sound_wood_defaults(),
+    node_box = {
+      type = 'fixed',
+      fixed = {
+        {-4/8, 2/8, -4/8, 4/8, 3/8, 4/8},
+        {-3/8, -4/8, -2/8, 3/8, 2/8, 3/8},
+        {-3/8, 0/8, -3/8, 3/8, 2/8, -2/8},
+        {-3/8, -4/8, -3/8, 3/8, -1/8, -2/8},
+        {-3/8, -1/8, -3/8, -1/8, 0/8, -2/8},
+        {1/8, -1/8, -3/8, 3/8, 0/8, -2/8},
+      }
+    },
+    tube = {
+      insert_object = function(pos, node, stack, direction)
+        local meta = minetest.get_meta(pos)
+        local inv = meta:get_inventory()
+        if stack:get_name() ~= "bees:frame_empty" or stack:get_count() > 1 then
+          return stack
+        end
+        for i = 1, 8 do
+          if inv:get_stack("frames", i):is_empty() then
+            inv:set_stack("frames", i, stack)
+            local timer = minetest.get_node_timer(pos)
+            timer:start(30)
+            meta:set_string('infotext','bees are aclimating')
+            return ItemStack("")
+          end
+        end
+        return stack
+      end,
+      can_insert = function(pos,node,stack,direction)
+        local meta = minetest.get_meta(pos)
+        local inv = meta:get_inventory()
+        if stack:get_name() ~= "bees:frame_empty" or stack:get_count() > 1 then
+          return false
+        end
+        for i = 1, 8 do
+          if inv:get_stack("frames", i):is_empty() then
+            return true
+          end
+        end
+        return false
+      end,
+      can_remove = function(pos,node,stack,direction)
+        if stack:get_name() == "bees:frame_full" then
+          return 1
+        else
+          return 0
+        end
+      end,
+      input_inventory = "frames",
+      connect_sides = {left=1, right=1, back=1, front=1, bottom=1, top=1}
+    },
+    on_construct = function(pos)
+      local timer = minetest.get_node_timer(pos)
+      local meta = minetest.get_meta(pos)
+      local inv = meta:get_inventory()
+      meta:set_int('agressive', 1)
+      inv:set_size('queen', 1)
+      inv:set_size('frames', 8)
+      meta:set_string('infotext','requires queen bee to function')
+    end,
+    on_rightclick = function(pos, node, clicker, itemstack)
+      minetest.show_formspec(
+        clicker:get_player_name(),
+        'bees:hive_artificial',
+        formspecs.hive_artificial(pos)
+      )
+      local meta = minetest.get_meta(pos)
+      local inv  = meta:get_inventory()
+      if meta:get_int('agressive') == 1 and inv:contains_item('queen', 'bees:queen') then
+        local health = clicker:get_hp()
+        clicker:set_hp(health-4)
+      else
+        meta:set_int('agressive', 1)
+      end
+    end,
+    on_timer = function(pos,elapsed)
+      local meta = minetest.get_meta(pos)
+      local inv = meta:get_inventory()
+      local timer = minetest.get_node_timer(pos)
+      if inv:contains_item('queen', 'bees:queen') then
+        if inv:contains_item('frames', 'bees:frame_empty') then
+          timer:start(30)
+          local rad  = 10
+          local minp = {x=pos.x-rad, y=pos.y-rad, z=pos.z-rad}
+          local maxp = {x=pos.x+rad, y=pos.y+rad, z=pos.z+rad}
+          local flowers = minetest.find_nodes_in_area(minp, maxp, 'group:flower')
+          local progress = meta:get_int('progress')
+          progress = progress + #flowers
+          meta:set_int('progress', progress)
+          if progress > 1000 then
+            local flower = flowers[math.random(#flowers)] 
+            bees.polinate_flower(flower, minetest.get_node(flower).name)
+            local stacks = inv:get_list('frames')
+            for k, v in pairs(stacks) do
+              if inv:get_stack('frames', k):get_name() == 'bees:frame_empty' then
+                meta:set_int('progress', 0)
+                inv:set_stack('frames',k,'bees:frame_full')
+                return
+              end
+            end
+          else
+            meta:set_string('infotext', 'progress: '..progress..'+'..#flowers..'/1000')
+          end
+        else
+          meta:set_string('infotext', 'does not have empty frame(s)')
+          timer:stop()
+        end
+      end
+    end,
+    on_metadata_inventory_take = function(pos, listname, index, stack, player)
+      if listname == 'queen' then
+        local timer = minetest.get_node_timer(pos)
+        local meta = minetest.get_meta(pos)
+        meta:set_string('infotext','requires queen bee to function')
+        timer:stop()
+      end
+    end,
+    allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+      local inv = minetest.get_meta(pos):get_inventory()
+      if from_list == to_list then 
+        if inv:get_stack(to_list, to_index):is_empty() then
+          return 1
+        else
+          return 0
+        end
+      else
+        return 0
+      end
+    end,
+    on_metadata_inventory_put = function(pos, listname, index, stack, player)
+      local meta = minetest.get_meta(pos)
+      local inv = meta:get_inventory()
+      local timer = minetest.get_node_timer(pos)
+      if listname == 'queen' or listname == 'frames' then
+        meta:set_string('queen', stack:get_name())
+        meta:set_string('infotext','queen is inserted, now for the empty frames');
+        if inv:contains_item('frames', 'bees:frame_empty') then
+          timer:start(30)
+          meta:set_string('infotext','bees are aclimating');
+        end
+      end
+    end,
+    allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+      if not minetest.get_meta(pos):get_inventory():get_stack(listname, index):is_empty() then return 0 end
+      if listname == 'queen' then
+        if stack:get_name():match('bees:queen*') then
+          return 1
+        end
+      elseif listname == 'frames' then
+        if stack:get_name() == ('bees:frame_empty') then
+          return 1
+        end
+      end
+      return 0
+    end,
+  })
     end
 
 print('[Mod]Bees Loaded!')
