@@ -1,12 +1,12 @@
 BEES MOD V2.2
 -------------
 
-DEPENDS
--------
-https://github.com/VanessaE/minetest-steel
-
 FEATURES
 --------
+3.0
+- Pipeworks compatibility (Industrial beehive)
+- Get honey comb from full frame
+
 2.2.1
 - removed steel dependency temporarily
 - fixed the craft for the extractor (and added alias for)
@@ -35,13 +35,13 @@ FEATURES
 FUTURE
 ------
 - more realistic spawning of wild bee hives
-- pipeworks compatibility (Industrial beehive) 
 
 CONTRIBUTORS
 ------------
 - bas080
 - VanessaE (wild bee hive nodebox)
 - Neuromancer (textures for wild bee hive and inspiration for other textures)
+- Novatux (enabled pipeworks compatibility)
 
 FORUM
 -----
