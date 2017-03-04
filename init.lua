@@ -177,7 +177,7 @@
 
   minetest.register_node('bees:hive_wild', {
     description = 'wild bee hive',
-    tile_images = {'bees_hive_wild.png','bees_hive_wild.png','bees_hive_wild.png', 'bees_hive_wild.png', 'bees_hive_wild_bottom.png'}, --Neuromancer's base texture
+    tiles = {'bees_hive_wild.png','bees_hive_wild.png','bees_hive_wild.png', 'bees_hive_wild.png', 'bees_hive_wild_bottom.png'}, --Neuromancer's base texture
     drawtype = 'nodebox',
     paramtype = 'light',
     paramtype2 = 'wallmounted',
